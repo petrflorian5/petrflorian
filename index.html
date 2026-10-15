@@ -70,7 +70,7 @@
       width: min(330px, 74vw, 38vh);
       aspect-ratio: 71.9 / 150;
       position: relative;
-      animation: settle 1.4s cubic-bezier(.2,.7,.2,1) both;
+      animation: settle 1.4s cubic-bezier(.2,.7,.2,1) backwards;   /* no held end state, so no lingering layer */
     }
     @keyframes settle {
       from { opacity: 0; transform: translateY(30px) scale(.97); }
@@ -84,10 +84,14 @@
       /* resting pose: screen faces the viewer, a slight turn keeps it physical.
          On desktop the script eases this towards the pointer and straightens it on hover. */
       transform: rotateX(3deg) rotateY(0deg) rotateZ(-6deg);
-      will-change: transform;
       pointer-events: none;
       --r: 17%/8.2%;
     }
+
+    /* Reading state: once the phone has straightened under the pointer it leaves 3D entirely,
+       so the contact is painted as ordinary 2D text, pixel-aligned and not resampled. */
+    .phone.flat { transform: none; transform-style: flat; }
+    .phone.flat .front { transform: none; }
 
     /* shadows on the desk, in the phone's plane */
     .shadow {
@@ -531,8 +535,8 @@
       var desktop = window.matchMedia('(pointer: fine) and (min-width: 561px)');
       var calm = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-      var REST  = { rx: 3, ry: 0,   rz: -6, s: 1,    lift: 0 };   // matches the CSS resting pose
-      var HOVER = { rx: 0, ry: 0,   rz: -1, s: 1.02, lift: 1 };
+      var REST  = { rx: 3, ry: 0, rz: -6, lift: 0 };   // matches the CSS resting pose
+      var HOVER = { rx: 0, ry: 0, rz: 0,  lift: 1 };   // exactly front-facing, no scale: text stays 1:1
       var TILT = 2;                // degrees, either axis
       var TAU = 100;               // ms; ~95 % of the way after 300 ms
 
@@ -541,16 +545,20 @@
 
       function retarget() {
         var base = hovering ? HOVER : REST;
-        var k = hovering ? .5 : 1;                       // even calmer while reading
+        var k = hovering ? 0 : 1;                        // no tilt while reading: the phone holds still
         goal.rx = base.rx - py * TILT * k;
         goal.ry = base.ry + px * TILT * k;
-        goal.rz = base.rz; goal.s = base.s; goal.lift = base.lift;
+        goal.rz = base.rz; goal.lift = base.lift;
+        var changed = false;
+        for (var key in goal) if (Math.abs(goal[key] - cur[key]) > .02) changed = true;
+        if (!changed) return;                            // e.g. moving within the phone: stay flat and still
+        if (phone.classList.contains("flat")) { phone.classList.remove("flat"); apply(); }  // back into 3D only when it moves
         if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
       }
 
       function apply() {
         phone.style.transform = 'rotateX(' + cur.rx.toFixed(3) + 'deg) rotateY(' + cur.ry.toFixed(3) +
-          'deg) rotateZ(' + cur.rz.toFixed(3) + 'deg) scale(' + cur.s.toFixed(4) + ')';
+          'deg) rotateZ(' + cur.rz.toFixed(3) + 'deg)';
         // the shadow falls a little further and softer as the phone lifts and tilts
         phone.style.setProperty('--sx', (5 + cur.lift * 1.5 - cur.ry * .6).toFixed(2) + '%');
         phone.style.setProperty('--sy', (4 + cur.lift * 2 + cur.rx * .4).toFixed(2) + '%');
@@ -565,9 +573,18 @@
         for (var key in goal) {
           var d = goal[key] - cur[key];
           cur[key] += d * a;
-          if (Math.abs(d) > .0005) moving = true;
+          if (Math.abs(d) > .06) moving = true;
+        }
+        if (!moving) {
+          // settle exactly on the target instead of creeping through sub-pixel transforms
+          for (key in goal) cur[key] = goal[key];
         }
         apply();
+        if (!moving && hovering) {
+          // front-facing and still: drop the 3D transform so the text renders natively
+          phone.style.transform = "";
+          phone.classList.add("flat");
+        }
         raf = moving ? requestAnimationFrame(step) : 0;
       }
 
@@ -591,6 +608,7 @@
         document.documentElement.removeEventListener('mouseleave', reset);
         cancelAnimationFrame(raf); raf = 0;
         cur = Object.assign({}, REST); goal = Object.assign({}, REST);
+        phone.classList.remove("flat");
         phone.style.transform = '';
         ['--sx', '--sy', '--sb', '--so'].forEach(function (p) { phone.style.removeProperty(p); });
         if (!desktop.matches || calm.matches) return;      // mobile, touch and reduced motion stay static
