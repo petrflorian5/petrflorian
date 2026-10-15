@@ -1,305 +1,451 @@
 <!doctype html>
-<html lang="cs">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Petr Florián</title>
   <meta name="description" content="Petr Florián – Commercial real estate professional.">
   <meta property="og:title" content="Petr Florián">
   <meta property="og:description" content="Commercial real estate professional">
   <meta property="og:url" content="https://petrflorian.cz/">
-  <meta property="og:type" content="website">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23f7f6f2'/><text x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-family='Helvetica,Arial,sans-serif' font-size='22' letter-spacing='3' fill='%23333'>PF</text></svg>">
+  <meta name="theme-color" content="#e2c9a6">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23e2793a'/><text x='50%25' y='56%25' text-anchor='middle' dominant-baseline='middle' font-family='Helvetica,Arial,sans-serif' font-size='26' font-weight='600' fill='%23fff'>PF</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --page: #ffffff;
-      --paper: #fefdfb;
-      --edge: #e9e6df;
-      --ink: #3b3a37;
-      --ink-soft: #7d7a73;
+      --ios-bg: #f2f2f7;
+      --ios-cell: #ffffff;
+      --ios-blue: #0a84ff;
+      --ios-label: #000000;
+      --ios-secondary: #6e6e73;
+      --ios-sep: rgba(60,60,67,.18);
+      /* iPhone 17 Pro, Cosmic Orange aluminium */
+      --al-hi: #f6a46a;
+      --al: #e2793a;
+      --al-mid: #c9622a;
+      --al-lo: #9c4719;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     html, body { height: 100%; }
 
+    /* ---------- walnut desk ---------- */
     body {
-      background:
-        radial-gradient(ellipse at 50% 45%, #ffffff 0%, #f8f8f6 60%, #f0f0ed 100%);
-      background-color: #f8f8f6;
-      color: var(--ink);
-      font-family: "Jost", "Helvetica Neue", Arial, sans-serif;
-      font-weight: 300;
-      -webkit-font-smoothing: antialiased;
       min-height: 100vh;
       display: grid;
       place-items: center;
       overflow: hidden;
       padding: 16px;
+      background-color: #e2c9a6;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* topographic contour lines, drawn on load (see script) */
-    #topo {
+    /* procedural light oak, drawn by the script below */
+    #desk {
       position: fixed;
       inset: 0;
       width: 100%;
       height: 100%;
-      pointer-events: none;
       z-index: 0;
+      pointer-events: none;
+    }
+    /* window light, warm bounce and vignette over the wood */
+    .light {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 50% at 32% 26%, rgba(255,248,236,.35), transparent 70%),
+        radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(90,58,30,.28) 100%);
     }
 
-    /* ---------- scene ---------- */
+    /* ---------- phone in 3D ---------- */
     .scene {
-      perspective: 1400px;
-      width: min(460px, 86vw);
-      aspect-ratio: 85 / 55;
+      perspective: 2600px;
+      z-index: 2;
+      width: min(330px, 74vw, 38vh);
+      aspect-ratio: 71.9 / 150;
       position: relative;
-      z-index: 1;
+      animation: settle 1.4s cubic-bezier(.2,.7,.2,1) both;
     }
-
-    .float {
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      transform-style: preserve-3d;
-      animation: levitate 7s ease-in-out infinite;
-    }
-
-    .card {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      transform-style: preserve-3d;
-      transform: rotateX(var(--rx, 14deg)) rotateY(var(--ry, -12deg)) rotateZ(-3deg);
-      transition: transform .9s cubic-bezier(.2,.7,.2,1);
-      will-change: transform;
-    }
-
-    /* paper thickness: stacked layers behind the face */
-    .layer {
-      position: absolute;
-      inset: 0;
-      border-radius: 3px;
-      background: var(--edge);
-    }
-    .layer:nth-child(1) { transform: translateZ(-1px); }
-    .layer:nth-child(2) { transform: translateZ(-2px); }
-    .layer:nth-child(3) { transform: translateZ(-3px); }
-    .layer:nth-child(4) { transform: translateZ(-4px); background: #dedad2; }
-    .layer:nth-child(5) {
-      transform: translateZ(-5px);
-      background: #d6d2ca;
-      box-shadow: 0 2px 4px rgba(0,0,0,.06), 0 28px 50px -18px rgba(30,26,20,.28);
-    }
-
-    .face {
-      position: absolute;
-      inset: 0;
-      pointer-events: auto;
-      transform: translateZ(.5px);
-      border-radius: 3px;
-      background-color: var(--paper);
-      overflow: hidden;
-      padding: 9% 8.5% 8%;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,.025);
-    }
-
-    /* cotton paper fibre texture */
-    .face::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.43 0 0 0 0 0.40 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      opacity: .22;
-      mix-blend-mode: multiply;
-      pointer-events: none;
-    }
-
-    /* moving light sheen */
-    .face::after {
-      content: "";
-      position: absolute;
-      inset: -40%;
-      background: radial-gradient(circle at var(--lx, 30%) var(--ly, 20%), rgba(255,255,255,.75), rgba(255,255,255,0) 45%);
-      pointer-events: none;
-      transition: background-position .9s;
-    }
-
-    /* blind-debossed micro-perforation, fading in from the right edge */
-    .perf {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        radial-gradient(circle at 50% 50%, rgba(255,255,255,1) 0 1.1px, transparent 1.6px),
-        radial-gradient(circle at 50% 50%, rgba(70,64,56,.30) 0 1.1px, transparent 1.6px);
-      background-size: 9px 9px, 9px 9px;
-      background-position: 0 1px, 0 0;
-      -webkit-mask-image: linear-gradient(105deg, transparent 48%, rgba(0,0,0,.35) 66%, #000 100%);
-              mask-image: linear-gradient(105deg, transparent 48%, rgba(0,0,0,.35) 66%, #000 100%);
-    }
-    /* clear area under the contact block */
-    .perf::after {
-      content: "";
-      position: absolute;
-      right: 0; bottom: 0;
-      width: 62%; height: 48%;
-      background: radial-gradient(ellipse at 70% 70%, var(--paper) 45%, rgba(254,253,251,0) 75%);
-    }
-
-    /* letterpress: slightly debossed ink */
-    .press {
-      color: var(--ink);
-      text-shadow:
-        0 1px 0 rgba(255,255,255,.9),
-        0 -0.5px 0 rgba(0,0,0,.12);
-      position: relative;
-      z-index: 1;
-    }
-
-    .name {
-      font-weight: 400;
-      font-size: clamp(17px, 4.6vw, 24px);
-      letter-spacing: .3em;
-      text-transform: uppercase;
-      line-height: 1.2;
-    }
-    .rule {
-      width: 14px;
-      height: 1px;
-      background: var(--ink);
-      opacity: .7;
-      margin: 12px 0 10px;
-      position: relative;
-      z-index: 1;
-    }
-    .title {
-      font-size: clamp(10px, 2.4vw, 12.5px);
-      letter-spacing: .06em;
-      color: var(--ink-soft);
-    }
-
-    .bottom {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .contact {
-      list-style: none;
-      text-align: left;
-      font-size: clamp(10px, 2.3vw, 12.5px);
-      letter-spacing: .05em;
-      line-height: 1.75;
-    }
-    .contact a {
-      color: inherit;
-      text-decoration: none;
-      transition: color .3s;
-    }
-    .contact a:hover, .contact a:focus-visible { color: #000; outline: none; }
-
-    .li {
-      display: block;
-      width: clamp(16px, 3.6vw, 19px);
-      height: clamp(16px, 3.6vw, 19px);
-      color: var(--ink);
-      opacity: .78;
-      transition: opacity .3s;
-      position: relative;
-      z-index: 1;
-      filter: drop-shadow(0 1px 0 rgba(255,255,255,.9));
-    }
-    .li:hover, .li:focus-visible { opacity: 1; outline: none; }
-    .li svg { width: 100%; height: 100%; display: block; fill: currentColor; }
-
-    /* ---------- ground shadow ---------- */
-    .shadow {
-      position: absolute;
-      left: 8%;
-      right: 8%;
-      bottom: -26%;
-      height: 26%;
-      border-radius: 50%;
-      background: radial-gradient(ellipse at center, rgba(40,36,30,.22) 0%, rgba(40,36,30,.08) 45%, rgba(40,36,30,0) 72%);
-      filter: blur(10px);
-      animation: shadow 7s ease-in-out infinite;
-      z-index: -1;
-    }
-
-    @keyframes levitate {
-      0%, 100% { transform: translateY(0); }
-      50%      { transform: translateY(-14px); }
-    }
-    @keyframes shadow {
-      0%, 100% { transform: scale(1);   opacity: 1; }
-      50%      { transform: scale(.88); opacity: .7; }
-    }
-
-    .intro { animation: intro 1.4s cubic-bezier(.2,.7,.2,1) both; }
-    @keyframes intro {
-      from { opacity: 0; transform: translateY(24px); }
+    @keyframes settle {
+      from { opacity: 0; transform: translateY(30px) scale(.97); }
       to   { opacity: 1; transform: none; }
     }
 
+    .phone {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      /* resting pose: screen faces the viewer, a slight turn keeps it physical.
+         On desktop the script eases this towards the pointer and straightens it on hover. */
+      transform: rotateX(3deg) rotateY(0deg) rotateZ(-6deg);
+      will-change: transform;
+      pointer-events: none;
+      --r: 17%/8.2%;
+    }
+
+    /* shadows on the desk, in the phone's plane */
+    .shadow {
+      position: absolute;
+      inset: 1% -1% -1% 3%;
+      border-radius: var(--r);
+      background: rgba(70,42,18,.5);
+      filter: blur(var(--sb, 20px));
+      opacity: var(--so, 1);
+      transform: translate(var(--sx, 5%), var(--sy, 4%)) translateZ(-9px);
+    }
+    .contact-shadow {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--r);
+      box-shadow: 0 0 5px 2px rgba(60,35,15,.45);
+      transform: translateZ(-8.5px);
+    }
+
+    /* aluminium unibody frame thickness */
+    .edge {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--r);
+      background: linear-gradient(135deg, var(--al-hi), var(--al) 22%, var(--al-mid) 55%, var(--al-lo) 80%, var(--al) 100%);
+    }
+    .edge:nth-of-type(3) { transform: translateZ(-1.5px); }
+    .edge:nth-of-type(4) { transform: translateZ(-3px); }
+    .edge:nth-of-type(5) { transform: translateZ(-4.5px); }
+    .edge:nth-of-type(6) { transform: translateZ(-6px); }
+    .edge:nth-of-type(7) { transform: translateZ(-7.5px); background: var(--al-lo); }
+
+    /* side controls */
+    .btn {
+      position: absolute;
+      background: linear-gradient(90deg, var(--al-lo), var(--al-hi));
+      border-radius: 3px;
+      transform: translateZ(-4px);
+      width: 1.5%;
+    }
+    .btn.power  { right: -1%; top: 24%; height: 10%; background: linear-gradient(90deg, var(--al-hi), var(--al-lo)); }
+    .btn.camera { right: -.9%; top: 55%; height: 6.5%; background: linear-gradient(90deg, #2c2a29, #6d6863); }  /* Camera Control */
+    .btn.action { left: -1%;  top: 16%; height: 4%; }
+    .btn.vup    { left: -1%;  top: 23%; height: 6.5%; }
+    .btn.vdown  { left: -1%;  top: 31%; height: 6.5%; }
+
+    /* front glass + ultra-thin black border */
+    .front {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--r);
+      background: #000;
+      padding: 2.3%;
+      transform: translateZ(.5px);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,190,140,.55),   /* polished chamfer of the frame */
+        inset 0 0 0 1.6px #1a1a1a;
+      container-type: inline-size;
+    }
+
+    .screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 15%/7.3%;
+      overflow: hidden;
+      background: var(--ios-bg);
+      pointer-events: auto;
+      --px: calc(1cqw / 4.02);      /* 1 pt on a 402 pt wide iPhone 17 Pro screen */
+      color: var(--ios-label);
+      font-size: calc(17 * var(--px));
+      letter-spacing: -.01em;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .glare {
+      position: absolute;
+      inset: 2.3%;
+      border-radius: 15%/7.3%;
+      background: linear-gradient(115deg, rgba(255,255,255,.20) 0%, rgba(255,255,255,.05) 26%, transparent 38%, transparent 76%, rgba(255,255,255,.06) 100%);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* ---------- iOS 26 contact card ---------- */
+    .poster {
+      position: relative;
+      flex: none;
+      padding-bottom: calc(18 * var(--px));
+      background:
+        radial-gradient(ellipse 90% 70% at 30% 0%, #ffd9bd 0%, transparent 60%),
+        radial-gradient(ellipse 80% 70% at 100% 20%, #f7b98d 0%, transparent 65%),
+        linear-gradient(180deg, #fbe3d0 0%, #f6eee8 70%, var(--ios-bg) 100%);
+    }
+
+    .status {
+      height: calc(56 * var(--px));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(8 * var(--px)) calc(34 * var(--px)) 0 calc(46 * var(--px));
+      font-weight: 600;
+      font-size: calc(17 * var(--px));
+      position: relative;
+    }
+    .island {
+      position: absolute;
+      left: 50%;
+      top: calc(12 * var(--px));
+      width: calc(124 * var(--px));
+      height: calc(36 * var(--px));
+      transform: translateX(-50%);
+      background: #000;
+      border-radius: 999px;
+    }
+    .status .icons { display: flex; align-items: center; gap: calc(6 * var(--px)); }
+    .status svg { height: calc(12 * var(--px)); width: auto; display: block; }
+
+    /* Liquid Glass controls */
+    .glass {
+      background: rgba(255,255,255,.55);
+      -webkit-backdrop-filter: blur(12px) saturate(1.6);
+              backdrop-filter: blur(12px) saturate(1.6);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.9),
+        inset 0 -1px 0 rgba(0,0,0,.04),
+        0 calc(2 * var(--px)) calc(10 * var(--px)) rgba(80,40,10,.12);
+      border: .5px solid rgba(255,255,255,.7);
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: calc(4 * var(--px)) calc(16 * var(--px)) 0;
+    }
+    .nav .circle {
+      width: calc(44 * var(--px));
+      height: calc(44 * var(--px));
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+    }
+    .nav .circle svg { height: calc(18 * var(--px)); width: auto; }
+    .nav .pill {
+      height: calc(44 * var(--px));
+      padding: 0 calc(18 * var(--px));
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-weight: 500;
+    }
+
+    .head { text-align: center; padding: calc(2 * var(--px)) calc(16 * var(--px)) calc(16 * var(--px)); }
+    .avatar {
+      width: calc(108 * var(--px));
+      height: calc(108 * var(--px));
+      margin: 0 auto calc(12 * var(--px));
+      border-radius: 50%;
+      display: block;
+      object-fit: cover;
+      background: #ece7e1;
+      box-shadow: 0 calc(6 * var(--px)) calc(18 * var(--px)) rgba(80,40,10,.18);
+    }
+    .name { font-size: calc(34 * var(--px)); font-weight: 700; letter-spacing: -.025em; line-height: 1.1; }
+    .role { color: var(--ios-secondary); font-size: calc(15 * var(--px)); margin-top: calc(5 * var(--px)); }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: calc(10 * var(--px));
+      padding: 0 calc(16 * var(--px));
+    }
+    .actions a {
+      border-radius: calc(18 * var(--px));
+      padding: calc(11 * var(--px)) 0 calc(8 * var(--px));
+      text-align: center;
+      color: var(--ios-label);
+      text-decoration: none;
+      font-size: calc(12 * var(--px));
+      font-weight: 500;
+      transition: transform .15s;
+    }
+    .actions a:active { transform: scale(.95); }
+    .actions svg { display: block; margin: 0 auto calc(5 * var(--px)); height: calc(22 * var(--px)); width: auto; fill: currentColor; }
+
+    .scroll {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: none;
+      display: flex;
+      flex-direction: column;
+    }
+    .scroll::-webkit-scrollbar { display: none; }
+    .list { padding: calc(4 * var(--px)) 0 calc(34 * var(--px)); }
+
+    .group {
+      margin: 0 calc(16 * var(--px)) calc(14 * var(--px));
+      background: var(--ios-cell);
+      border-radius: calc(26 * var(--px));
+      overflow: hidden;
+    }
+    .cell {
+      display: block;
+      padding: calc(12 * var(--px)) calc(20 * var(--px));
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      transition: background .15s;
+    }
+    .cell:active { background: #e5e5ea; }
+    .cell + .cell::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: calc(20 * var(--px));
+      right: 0;
+      border-top: .5px solid var(--ios-sep);
+    }
+    .cell .k { font-size: calc(14 * var(--px)); color: var(--ios-label); }
+    .cell .v { color: var(--ios-blue); font-size: calc(17 * var(--px)); margin-top: calc(1 * var(--px)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cell.btn-cell { color: var(--ios-blue); padding: calc(14 * var(--px)) calc(20 * var(--px)); }
+
+    .home {
+      position: absolute;
+      left: 50%;
+      bottom: calc(8 * var(--px));
+      width: calc(140 * var(--px));
+      height: calc(5 * var(--px));
+      transform: translateX(-50%);
+      background: #000;
+      border-radius: 999px;
+      z-index: 4;
+    }
+
+    /* on a phone the page *is* the contact screen: no desk, no device frame */
+    @media (max-width: 560px) {
+      html { background: var(--ios-bg); }
+      body {
+        display: block;
+        overflow: visible;
+        padding: 0;
+        background: var(--ios-bg);
+      }
+      #desk, .light, .shadow, .contact-shadow, .edge, .btn, .glare,
+      .status, .home, .nav { display: none; }
+      .scene {
+        width: 100%;
+        aspect-ratio: auto;
+        perspective: none;
+        animation: none;
+      }
+      .phone {
+        position: static;
+        transform: none;
+        transition: none;
+        transform-style: flat;
+      }
+      .front {
+        position: static;
+        padding: 0;
+        border-radius: 0;
+        background: none;
+        box-shadow: none;
+        transform: none;
+      }
+      .screen {
+        border-radius: 0;
+        overflow: visible;
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+      .scroll { overflow: visible; }
+      .poster { padding-top: calc(env(safe-area-inset-top, 0px) + 24 * var(--px)); }
+      .list { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24 * var(--px)); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
-      .float, .shadow, .intro { animation: none; }
-      .card { transition: none; }
+      .scene { animation: none; }
+      .phone { transition: none; }
     }
   </style>
 </head>
 <body>
-  <canvas id="topo" aria-hidden="true"></canvas>
-  <div class="scene intro">
-    <div class="shadow" aria-hidden="true"></div>
-    <div class="float">
-      <article class="card" id="card">
-        <div class="layer"></div><div class="layer"></div><div class="layer"></div><div class="layer"></div><div class="layer"></div>
-        <div class="face">
-          <div class="perf" aria-hidden="true"></div>
-          <header>
-            <h1 class="name press">Petr Florián</h1>
-            <div class="rule" aria-hidden="true"></div>
-            <p class="title press">Commercial real estate professional</p>
-          </header>
+  <canvas id="desk" aria-hidden="true"></canvas>
+  <div class="light" aria-hidden="true"></div>
+  <div class="scene">
+    <div class="phone" id="phone">
+      <div class="shadow" aria-hidden="true"></div>
+      <div class="contact-shadow" aria-hidden="true"></div>
+      <div class="edge"></div><div class="edge"></div><div class="edge"></div><div class="edge"></div><div class="edge"></div>
+      <i class="btn power"></i><i class="btn camera"></i><i class="btn action"></i><i class="btn vup"></i><i class="btn vdown"></i>
 
-          <div class="bottom">
-            <a class="li" href="https://www.linkedin.com/in/petrflorian/" target="_blank" rel="noopener" aria-label="LinkedIn">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
-            </a>
-            <ul class="contact press">
-              <li><a href="tel:+420722022254">+420 722 022 254</a></li>
-              <li><a href="mailto:petrflorian@icloud.com">petrflorian@icloud.com</a></li>
-            </ul>
+      <div class="front">
+        <main class="screen">
+          <div class="scroll">
+            <header class="poster">
+              <div class="status">
+                <span id="clock">9:41</span>
+                <span class="island" aria-hidden="true"></span>
+                <span class="icons" aria-hidden="true">
+                  <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" y="0" width="3" height="12" rx=".8"/></svg>
+                  <svg viewBox="0 0 16 12"><path d="M8 2.6c2.3 0 4.4.9 6 2.4l1.2-1.2A10 10 0 0 0 8 .9 10 10 0 0 0 .8 3.8L2 5c1.6-1.5 3.7-2.4 6-2.4Zm0 3.3c1.4 0 2.6.5 3.6 1.4l1.2-1.2A6.8 6.8 0 0 0 8 4.2c-1.8 0-3.5.7-4.8 1.9l1.2 1.2c1-.9 2.2-1.4 3.6-1.4Zm0 3.3c-.5 0-1 .2-1.3.5L8 11l1.3-1.3c-.3-.3-.8-.5-1.3-.5Z"/></svg>
+                  <svg viewBox="0 0 27 12"><rect x=".5" y=".5" width="23" height="11" rx="3.2" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="18" height="8" rx="2"/><path d="M25 4v4c.8-.3 1.3-1.1 1.3-2S25.8 4.3 25 4Z" opacity=".45"/></svg>
+                </span>
+              </div>
+
+              <div class="nav" aria-hidden="true">
+                <span class="circle glass"><svg viewBox="0 0 12 21" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2 2 10.5 10 19"/></svg></span>
+                <span class="pill glass">Edit</span>
+              </div>
+
+              <div class="head">
+                <img class="avatar" src="avatar.jpg" width="360" height="360" alt="Petr Florián">
+                <h1 class="name">Petr Florián</h1>
+                <p class="role">Commercial real estate professional</p>
+              </div>
+
+              <nav class="actions" aria-label="Quick actions">
+                <a class="glass" href="sms:+420722022254"><svg viewBox="0 0 24 22"><path d="M12 0C5.4 0 0 4.4 0 9.8c0 3 1.7 5.7 4.4 7.5-.2 1.6-1 3.3-2.3 4.4 2.6-.1 5-1.1 6.6-2.5 1 .2 2.2.4 3.3.4 6.6 0 12-4.4 12-9.8S18.6 0 12 0Z"/></svg>message</a>
+                <a class="glass" href="tel:+420722022254"><svg viewBox="0 0 24 24"><path d="M6.6 1.3c.6-.2 1.3 0 1.6.6l2.3 4c.3.6.2 1.3-.3 1.7L8.4 9.1c1.3 2.9 3.6 5.2 6.5 6.5l1.5-1.8c.4-.5 1.1-.6 1.7-.3l4 2.3c.6.3.8 1 .6 1.6l-.9 2.7c-.4 1.3-1.7 2.1-3 1.9C10 21 3 14 2 5.2c-.2-1.3.6-2.6 1.9-3l2.7-.9Z"/></svg>call</a>
+                <a class="glass" href="https://www.linkedin.com/in/petrflorian/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>LinkedIn</a>
+                <a class="glass" href="mailto:petrflorian@icloud.com"><svg viewBox="0 0 26 20"><path d="M3 0h20a3 3 0 0 1 3 3v.4l-13 8.1L0 3.4V3a3 3 0 0 1 3-3Zm-3 5.8 12.5 7.8c.3.2.7.2 1 0L26 5.8V17a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3V5.8Z"/></svg>mail</a>
+              </nav>
+            </header>
+
+            <div class="list">
+              <section class="group">
+                <a class="cell" href="tel:+420722022254"><div class="k">mobile</div><div class="v">+420 722 022 254</div></a>
+                <a class="cell" href="mailto:petrflorian@icloud.com"><div class="k">email</div><div class="v">petrflorian@icloud.com</div></a>
+                <a class="cell" href="https://www.linkedin.com/in/petrflorian/" target="_blank" rel="noopener"><div class="k">LinkedIn</div><div class="v">linkedin.com/in/petrflorian</div></a>
+              </section>
+              <section class="group">
+                <a class="cell btn-cell" href="petr-florian.vcf" download="Petr-Florian.vcf">Add to Contacts</a>
+                <a class="cell btn-cell" href="#" id="share">Share Contact</a>
+              </section>
+            </div>
           </div>
-        </div>
-      </article>
+          <span class="home" aria-hidden="true"></span>
+        </main>
+        <div class="glare" aria-hidden="true"></div>
+      </div>
     </div>
   </div>
 
   <script>
-    /* topographic background: Perlin noise field + marching squares */
+    /* light oak desk: Perlin-warped grain lines and fibres */
     (function () {
-      var canvas = document.getElementById('topo');
+      var canvas = document.getElementById('desk');
       var ctx = canvas.getContext('2d');
 
-      // seeded permutation so the "map" looks the same on every visit
-      var perm = new Uint8Array(512), s = 20261015;
+      var perm = new Uint8Array(512), s = 7203;
       var base = []; for (var i = 0; i < 256; i++) base[i] = i;
       for (i = 255; i > 0; i--) {
         s = (s * 1664525 + 1013904223) >>> 0;
         var j = s % (i + 1), t = base[i]; base[i] = base[j]; base[j] = t;
       }
       for (i = 0; i < 512; i++) perm[i] = base[i & 255];
-
       var G = [[1,1],[-1,1],[1,-1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1]];
       function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
       function dot(h, x, y) { var g = G[h & 7]; return g[0] * x + g[1] * y; }
@@ -313,81 +459,148 @@
         var x2 = dot(ab, x, y - 1) + u * (dot(bb, x - 1, y - 1) - dot(ab, x, y - 1));
         return x1 + v * (x2 - x1);
       }
-      function field(x, y) {
-        var f = 1 / 260;
-        return noise(x * f, y * f) + .45 * noise(x * f * 2.1 + 7.3, y * f * 2.1 + 3.1)
-             + .15 * noise(x * f * 4.3 + 1.7, y * f * 4.3 + 9.2);
-      }
 
-      // marching squares segment table, edges: 0 top, 1 right, 2 bottom, 3 left
-      var T = [[],[[3,2]],[[2,1]],[[3,1]],[[0,1]],[[3,0],[2,1]],[[0,2]],[[3,0]],
-               [[3,0]],[[0,2]],[[0,1],[3,2]],[[0,1]],[[3,1]],[[2,1]],[[3,2]],[]];
-
+      var LIGHT = [238, 217, 186], DARK = [172, 128, 86];
       var lastW = 0;
       function draw() {
-        var w = window.innerWidth, h = window.innerHeight;
-        if (Math.abs(w - lastW) < 2 && canvas.height) return;   // ignore mobile URL-bar jitter
-        lastW = w;
-        var dpr = Math.min(window.devicePixelRatio || 1, 2);
-        var H = Math.max(h, screen.height || h);                 // draw tall enough for URL-bar changes
-        canvas.width = w * dpr; canvas.height = H * dpr;
-        canvas.style.height = H + 'px';
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        if (window.matchMedia("(max-width: 560px)").matches) return;   // no desk on phones
+        var vw = window.innerWidth, vh = Math.max(window.innerHeight, screen.height || 0);
+        if (Math.abs(vw - lastW) < 2 && canvas.width) return;
+        lastW = vw;
+        // wood is soft: render at most ~1.2 MP and let the browser upscale
+        var scale = Math.min(1, Math.sqrt(1200000 / (vw * vh)));
+        var w = Math.ceil(vw * scale), h = Math.ceil(vh * scale);
+        canvas.width = w; canvas.height = h;
+        canvas.style.height = vh + 'px';
+        var img = ctx.createImageData(w, h), d = img.data;
+        var k = 1 / scale;                              // back to CSS px for the noise
 
-        var step = 4, cols = Math.ceil(w / step) + 1, rows = Math.ceil(H / step) + 1;
-        var ox = -w / 2, oy = -H / 2;                           // centre the map on the viewport
-        var v = new Float32Array(cols * rows);
-        for (var r = 0; r < rows; r++)
-          for (var c = 0; c < cols; c++) v[r * cols + c] = field(c * step + ox, r * step + oy);
-
-        ctx.lineWidth = 1;
-        ctx.lineJoin = 'round';
-        for (var L = -1.2, n = 0; L <= 1.2; L += .075, n++) {
-          ctx.beginPath();
-          for (r = 0; r < rows - 1; r++) {
-            for (c = 0; c < cols - 1; c++) {
-              var a = v[r * cols + c], b = v[r * cols + c + 1],
-                  cc = v[(r + 1) * cols + c + 1], d = v[(r + 1) * cols + c];
-              var idx = (a > L) << 3 | (b > L) << 2 | (cc > L) << 1 | (d > L);
-              var segs = T[idx]; if (!segs.length) continue;
-              var x0 = c * step, y0 = r * step;
-              for (var k = 0; k < segs.length; k++) {
-                for (var e = 0; e < 2; e++) {
-                  var edge = segs[k][e], px, py;
-                  if (edge === 0)      { px = x0 + step * (L - a) / (b - a);  py = y0; }
-                  else if (edge === 1) { px = x0 + step; py = y0 + step * (L - b) / (cc - b); }
-                  else if (edge === 2) { px = x0 + step * (L - d) / (cc - d); py = y0 + step; }
-                  else                 { px = x0; py = y0 + step * (L - a) / (d - a); }
-                  if (e === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-                }
-              }
-            }
+        for (var y = 0; y < h; y++) {
+          for (var x = 0; x < w; x++) {
+            var X = x * k + 300, Y = y * k + 120;
+            // warp coordinates so the dense grain meanders and forms cathedral arches
+            var warp = noise(X * .0014, Y * .0055) * 34 + noise(X * .006, Y * .02) * 5;
+            var mask = noise(X * .003, Y * .04) * .5 + .5;                         // lines fade in and out
+            var r = (Math.pow(.5 + .5 * Math.sin(Y * .5 + warp), 7) * .3           // latewood lines
+                  + Math.pow(.5 + .5 * Math.sin(Y * 1.35 + warp * 1.6), 10) * .12)  // finer secondary lines
+                  * mask * mask * 1.6;
+            var figure = noise(X * .0008, Y * .004) * .5 + .5;                    // broad tonal bands
+            var fibre = (noise(X * .012, Y * 1.1) + noise(X * .05, Y * 2.6) * .6) * .5 + .5;  // fine straight fibres
+            var v = .06 + figure * .3 + r + fibre * .2;
+            v = v < 0 ? 0 : v > 1 ? 1 : v;
+            var o = (y * w + x) * 4;
+            d[o]     = LIGHT[0] + (DARK[0] - LIGHT[0]) * v;
+            d[o + 1] = LIGHT[1] + (DARK[1] - LIGHT[1]) * v;
+            d[o + 2] = LIGHT[2] + (DARK[2] - LIGHT[2]) * v;
+            d[o + 3] = 255;
           }
-          ctx.strokeStyle = n % 5 === 0 ? 'rgba(70,66,60,.26)' : 'rgba(70,66,60,.15)';
-          ctx.stroke();
         }
+        ctx.putImageData(img, 0, 0);
       }
-
       draw();
       var timer;
-      window.addEventListener('resize', function () { clearTimeout(timer); timer = setTimeout(draw, 150); });
+      window.addEventListener('resize', function () { clearTimeout(timer); timer = setTimeout(draw, 200); });
     })();
 
     (function () {
-      var card = document.getElementById('card');
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      var fine = window.matchMedia('(pointer: fine)').matches;
-      if (!fine) return;
-      window.addEventListener('mousemove', function (e) {
-        var x = e.clientX / window.innerWidth - .5;
-        var y = e.clientY / window.innerHeight - .5;
-        card.style.setProperty('--ry', (-12 + x * 18).toFixed(2) + 'deg');
-        card.style.setProperty('--rx', (14 - y * 14).toFixed(2) + 'deg');
-        card.style.setProperty('--lx', (50 + x * 60).toFixed(1) + '%');
-        card.style.setProperty('--ly', (40 + y * 60).toFixed(1) + '%');
+      // live clock in the status bar
+      var clock = document.getElementById('clock');
+      function tick() {
+        var d = new Date();
+        clock.textContent = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+      }
+      tick(); setInterval(tick, 15000);
+
+      // native share sheet where available, otherwise copy the link
+      document.getElementById('share').addEventListener('click', function (e) {
+        e.preventDefault();
+        var data = { title: 'Petr Florián', text: 'Petr Florián – Commercial real estate professional', url: location.href };
+        if (navigator.share) { navigator.share(data).catch(function () {}); }
+        else if (navigator.clipboard) {
+          var el = e.currentTarget, old = el.textContent;
+          navigator.clipboard.writeText(location.href).then(function () {
+            el.textContent = 'Link copied'; setTimeout(function () { el.textContent = old; }, 1600);
+          });
+        }
       });
-      document.addEventListener('mouseleave', function () {
-        ['--rx', '--ry', '--lx', '--ly'].forEach(function (p) { card.style.removeProperty(p); });
+
+      // Desktop only: restrained tilt towards the pointer (max ±2°), and on hover
+      // the phone straightens to face the viewer so the contact stays easy to read.
+      var phone = document.getElementById('phone');
+      var scene = document.querySelector('.scene');
+      var desktop = window.matchMedia('(pointer: fine) and (min-width: 561px)');
+      var calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      var REST  = { rx: 3, ry: 0,   rz: -6, s: 1,    lift: 0 };   // matches the CSS resting pose
+      var HOVER = { rx: 0, ry: 0,   rz: -1, s: 1.02, lift: 1 };
+      var TILT = 2;                // degrees, either axis
+      var TAU = 100;               // ms; ~95 % of the way after 300 ms
+
+      var cur = Object.assign({}, REST), goal = Object.assign({}, REST);
+      var px = 0, py = 0, hovering = false, raf = 0, last = 0;
+
+      function retarget() {
+        var base = hovering ? HOVER : REST;
+        var k = hovering ? .5 : 1;                       // even calmer while reading
+        goal.rx = base.rx - py * TILT * k;
+        goal.ry = base.ry + px * TILT * k;
+        goal.rz = base.rz; goal.s = base.s; goal.lift = base.lift;
+        if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+      }
+
+      function apply() {
+        phone.style.transform = 'rotateX(' + cur.rx.toFixed(3) + 'deg) rotateY(' + cur.ry.toFixed(3) +
+          'deg) rotateZ(' + cur.rz.toFixed(3) + 'deg) scale(' + cur.s.toFixed(4) + ')';
+        // the shadow falls a little further and softer as the phone lifts and tilts
+        phone.style.setProperty('--sx', (5 + cur.lift * 1.5 - cur.ry * .6).toFixed(2) + '%');
+        phone.style.setProperty('--sy', (4 + cur.lift * 2 + cur.rx * .4).toFixed(2) + '%');
+        phone.style.setProperty('--sb', (20 + cur.lift * 8).toFixed(1) + 'px');
+        phone.style.setProperty('--so', (1 - cur.lift * .15).toFixed(3));
+      }
+
+      function step(now) {
+        var a = 1 - Math.exp(-(now - last) / TAU);
+        last = now;
+        var moving = false;
+        for (var key in goal) {
+          var d = goal[key] - cur[key];
+          cur[key] += d * a;
+          if (Math.abs(d) > .0005) moving = true;
+        }
+        apply();
+        raf = moving ? requestAnimationFrame(step) : 0;
+      }
+
+      function onMove(e) {
+        var r = scene.getBoundingClientRect();
+        // pointer relative to the phone's centre, normalised to the viewport and clamped,
+        // so nothing jumps near the phone's edges or the window border
+        px = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (window.innerWidth / 2)));
+        py = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (window.innerHeight / 2)));
+        hovering = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+        retarget();
+      }
+
+      function reset() {
+        px = py = 0; hovering = false;
+        retarget();
+      }
+
+      function setup() {
+        window.removeEventListener('mousemove', onMove);
+        document.documentElement.removeEventListener('mouseleave', reset);
+        cancelAnimationFrame(raf); raf = 0;
+        cur = Object.assign({}, REST); goal = Object.assign({}, REST);
+        phone.style.transform = '';
+        ['--sx', '--sy', '--sb', '--so'].forEach(function (p) { phone.style.removeProperty(p); });
+        if (!desktop.matches || calm.matches) return;      // mobile, touch and reduced motion stay static
+        window.addEventListener('mousemove', onMove);
+        document.documentElement.addEventListener('mouseleave', reset);
+      }
+
+      setup();
+      [desktop, calm].forEach(function (m) {
+        if (m.addEventListener) m.addEventListener('change', setup); else m.addListener(setup);
       });
     })();
   </script>
