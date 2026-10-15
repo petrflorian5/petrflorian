@@ -244,12 +244,9 @@
       height: calc(108 * var(--px));
       margin: 0 auto calc(12 * var(--px));
       border-radius: 50%;
-      background: linear-gradient(180deg, #b6bac3, #8b9099);
-      color: #fff;
-      display: grid;
-      place-items: center;
-      font-size: calc(44 * var(--px));
-      font-weight: 500;
+      display: block;
+      object-fit: cover;
+      background: #ece7e1;
       box-shadow: 0 calc(6 * var(--px)) calc(18 * var(--px)) rgba(80,40,10,.18);
     }
     .name { font-size: calc(34 * var(--px)); font-weight: 700; letter-spacing: -.025em; line-height: 1.1; }
@@ -323,9 +320,46 @@
       z-index: 4;
     }
 
+    /* on a phone the page *is* the contact screen: no desk, no device frame */
     @media (max-width: 560px) {
-      .scene { width: min(70vw, 40vh); }
-      .phone { transform: rotateX(var(--rx, 16deg)) rotateY(var(--ry, 0deg)) rotateZ(-7deg); }
+      html { background: var(--ios-bg); }
+      body {
+        display: block;
+        overflow: visible;
+        padding: 0;
+        background: var(--ios-bg);
+      }
+      #desk, .light, .shadow, .contact-shadow, .edge, .btn, .glare,
+      .status, .home, .nav { display: none; }
+      .scene {
+        width: 100%;
+        aspect-ratio: auto;
+        perspective: none;
+        animation: none;
+      }
+      .phone {
+        position: static;
+        transform: none;
+        transition: none;
+        transform-style: flat;
+      }
+      .front {
+        position: static;
+        padding: 0;
+        border-radius: 0;
+        background: none;
+        box-shadow: none;
+        transform: none;
+      }
+      .screen {
+        border-radius: 0;
+        overflow: visible;
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+      .scroll { overflow: visible; }
+      .poster { padding-top: calc(env(safe-area-inset-top, 0px) + 24 * var(--px)); }
+      .list { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24 * var(--px)); }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -364,7 +398,7 @@
               </div>
 
               <div class="head">
-                <div class="avatar" aria-hidden="true">PF</div>
+                <img class="avatar" src="avatar.jpg" width="360" height="360" alt="Petr Florián">
                 <h1 class="name">Petr Florián</h1>
                 <p class="role">Commercial real estate professional</p>
               </div>
@@ -426,6 +460,7 @@
       var LIGHT = [238, 217, 186], DARK = [172, 128, 86];
       var lastW = 0;
       function draw() {
+        if (window.matchMedia("(max-width: 560px)").matches) return;   // no desk on phones
         var vw = window.innerWidth, vh = Math.max(window.innerHeight, screen.height || 0);
         if (Math.abs(vw - lastW) < 2 && canvas.width) return;
         lastW = vw;
@@ -490,13 +525,11 @@
       var phone = document.getElementById('phone');
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       if (!window.matchMedia('(pointer: fine)').matches) return;
-      var narrow = window.matchMedia('(max-width: 560px)');
-      window.addEventListener('mousemove', function (e) {
+            window.addEventListener('mousemove', function (e) {
         var x = e.clientX / window.innerWidth - .5;
         var y = e.clientY / window.innerHeight - .5;
-        var base = narrow.matches ? 16 : 24;
         phone.style.setProperty('--ry', (x * 12).toFixed(2) + 'deg');
-        phone.style.setProperty('--rx', (base - y * 12).toFixed(2) + 'deg');
+        phone.style.setProperty('--rx', (24 - y * 12).toFixed(2) + 'deg');
       });
       document.addEventListener('mouseleave', function () {
         phone.style.removeProperty('--rx'); phone.style.removeProperty('--ry');
